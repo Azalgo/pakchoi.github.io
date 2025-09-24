@@ -37,40 +37,17 @@
   </style>
   <!-- Firebase (optional) -->
    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
   
-    const firebaseConfig = {
-      apiKey: "…",
-      authDomain: "pakchoi-cbbff.firebaseapp.com",
-      projectId: "pakchoi-cbbff",
-      storageBucket: "pakchoi-cbbff.appspot.com",
-      messagingSenderId: "153676600433",
-      appId: "1:153676600433:web:c96dbc5abb5802e4fd77d0",
-    };
+    // Mets tes valeurs ici
+    const SUPABASE_URL = "https://inwjlnlppnfecndmkqpg.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlud2psbmxwcG5mZWNuZG1rcXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NDU1MTYsImV4cCI6MjA3NDMyMTUxNn0.dWvcYHoGHAjVeAybVqmcCcruTrVJKZdxfUInEcbSyEY";
   
-    const appInst = initializeApp(firebaseConfig);
-    const auth = getAuth(appInst);
-    const storage = getStorage(appInst, "gs://pakchoi-cbbff.appspot.com");
-    const db = getFirestore(appInst);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
-    // Désactive le bouton tant qu’on n’est pas connecté
-    const saveBtn = document.querySelector('#saveCloudBtn');
-    if (saveBtn) saveBtn.disabled = true;
-  
-    // 1) Connexion anonyme puis 2) activer l’UI
-    signInAnonymously(auth).catch(console.error);
-  
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('auth OK', user.uid);
-        window.__FB__ = { auth, storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp };
-        if (saveBtn) saveBtn.disabled = false;   // <--- activer maintenant
-      }
-    });
-  </script>
+    // Expose au reste de la page (comme on faisait pour Firebase)
+    window.__SB__ = { supabase };
+</script>
 </head>
 <body>
   <header>
@@ -104,7 +81,7 @@
         <div class="controls" style="margin-bottom:8px;">
           <button id="exportJsonBtn" class="btn-accent">📦 Export JSON (COCO-lite)</button>
           <button id="exportYoloBtn" class="btn-ok">🟢 Export YOLO (zip)</button>
-          <button id="saveCloudBtn" class="btn-accent">☁️ Enregistrer sur Firebase</button>
+          <button id="saveCloudBtn" class="btn-accent">☁️ Enregistrer sur Supabase</button>
         </div>
         <div class="footer" id="status">0 image</div>
       </div>
@@ -376,33 +353,60 @@
     draw();
 
     // --- Save to Firebase (images + annotations) ---
-    async function saveAllToFirebase(){
-      if (!window.__FB__) { alert('Firebase non configuré'); return; }
-      const { storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp } = window.__FB__;
-      const annCol = collection(db, 'annotations');
-      for (const it of state.images){
-        try {
-          // 1) Upload image
-          const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${it.name}`;
-          const storageRef = ref(storage, path);
-          await uploadBytes(storageRef, it.file);
-          const url = await getDownloadURL(storageRef);
-          // 2) Save annotation doc
-          const payload = {
-            file_name: it.name,
-            storage_path: path,
-            download_url: url,
-            width: it.width,
-            height: it.height,
-            boxes: it.boxes.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,class:b.class})),
-            created_at: serverTimestamp(),
-          };
-          await addDoc(annCol, payload);
-        } catch (e){ console.error(e); alert('Erreur Firebase pour '+it.name+': '+e.message); }
+    async function saveAllToSupabase(state) {
+    if (!window.__SB__) { alert("Supabase non configuré"); return; }
+    const { supabase } = window.__SB__;
+
+    for (const it of state.images) {
+      try {
+        // 1) Upload du fichier
+        const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${it.name}`;
+
+        const { error: upErr } = await supabase
+          .storage
+          .from('uploads')
+          .upload(path.replace(/^uploads\//,''), it.file, { upsert: false }); 
+          // NB: dans supabase, l’API attend le chemin relatif au bucket
+
+        if (upErr) throw upErr;
+
+        // 2) URL publique (si bucket public)
+        let download_url;
+        const { data: pub } = supabase.storage.from('uploads').getPublicUrl(path.replace(/^uploads\//,''));
+        if (pub?.publicUrl) {
+          download_url = pub.publicUrl;
+        } else {
+          // si bucket privé, génère un URL signé valable X secondes:
+          const { data: signed, error: signErr } = await supabase
+            .storage
+            .from('uploads')
+            .createSignedUrl(path.replace(/^uploads\//,''), 60 * 60); // 1h
+          if (signErr) throw signErr;
+          download_url = signed.signedUrl;
+        }
+
+        // 3) Insert annotation
+        const payload = {
+          file_name: it.name,
+          storage_path: path,
+          download_url,
+          width: it.width,
+          height: it.height,
+          boxes: it.boxes.map(b => ({ x: b.x, y: b.y, w: b.w, h: b.h, class: b.class }))
+        };
+
+        const { error: insErr } = await supabase.from('annotations').insert(payload);
+        if (insErr) throw insErr;
+
+      } catch (e) {
+        console.error(e);
+        alert('Erreur Supabase pour ' + it.name + ' : ' + e.message);
       }
-      alert('Enregistrement terminé sur Firebase ✅');
     }
-    saveCloudBtn.onclick = saveAllToFirebase;
+    alert('Enregistrement terminé sur Supabase ✅');
+  }
+
+    saveBtn.onclick = () => saveAllToSupabase(window.state || window.__annotState || state);
   </script>
 </body>
 </html>
