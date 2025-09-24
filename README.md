@@ -1,9 +1,8 @@
-<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PakChoï faut y aller</title>
+  <title>Annotateur – Pak-choi / Blette</title>
   <style>
     :root { --bg:#0b1020; --fg:#eaf2ff; --muted:#9fb3d1; --accent:#7aa2ff; --danger:#ff6b6b; --ok:#2ecc71; }
     html, body { height:100%; }
@@ -42,10 +41,45 @@
 
     .footer{ color: var(--muted); font-size: 12px; margin-top:6px; }
   </style>
+  <!-- Firebase (optional) -->
+  <script type="module" id="firebase-setup">
+    // === Firebase OPTIONAL setup ===
+    // 1) Crée un projet Firebase → Web App → récupère la config ci-dessous
+    // 2) Active Authentication (sign-in method: Anonymous)
+    // 3) Active Firestore et Storage
+    // 4) Colle ta config dans FIREBASE_CONFIG et passe FIREBASE_ENABLED à true
+
+    const FIREBASE_ENABLED = false; // <-- passe à true quand tu as mis ta config
+    const FIREBASE_CONFIG = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+
+    if (FIREBASE_ENABLED) {
+      const app = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const authMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+      const storeMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
+      const dbMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+      const appInst = app.initializeApp(FIREBASE_CONFIG);
+      const auth = authMod.getAuth(appInst);
+      await authMod.signInAnonymously(auth);
+      const storage = storeMod.getStorage(appInst);
+      const db = dbMod.getFirestore(appInst);
+
+      // expose pour le script principal
+      window.__FB__ = { auth, storage, db, ref: storeMod.ref, uploadBytes: storeMod.uploadBytes, getDownloadURL: storeMod.getDownloadURL,
+                        collection: dbMod.collection, addDoc: dbMod.addDoc, serverTimestamp: dbMod.serverTimestamp };
+    }
+  </script>
 </head>
 <body>
   <header>
-    <h1>PakChoï faut y aller</h1>
+    <h1>Annotateur – Pak-choi / Blette</h1>
     <span class="badge">Local & gratuit • Aucune donnée envoyée</span>
   </header>
 
@@ -77,6 +111,7 @@
         <div class="controls" style="margin-bottom:8px;">
           <button id="exportJsonBtn" class="btn-accent">📦 Export JSON (COCO-lite)</button>
           <button id="exportYoloBtn" class="btn-ok">🟢 Export YOLO (zip)</button>
+          <button id="saveCloudBtn" class="btn-accent" style="display:none;">☁️ Enregistrer sur Firebase</button>
         </div>
         <div class="footer" id="status">0 image</div>
       </div>
@@ -122,6 +157,7 @@
     const clearBtn = document.getElementById('clearBtn');
     const exportJsonBtn = document.getElementById('exportJsonBtn');
     const exportYoloBtn = document.getElementById('exportYoloBtn');
+    const saveCloudBtn = document.getElementById('saveCloudBtn');
     const boxesList = document.getElementById('boxesList');
     const status = document.getElementById('status');
     const dropZone = document.getElementById('dropZone');
@@ -210,7 +246,7 @@
       const arr = Array.from(files || []);
       const readers = arr.map(f => new Promise((resolve)=>{
         const img = new Image();
-        img.onload = ()=> resolve({ name: f.name, img, width: img.width, height: img.height, boxes: [], scale: null });
+        img.onload = ()=> resolve({ name: f.name, img, width: img.width, height: img.height, boxes: [], scale: null, file: f });
         img.src = URL.createObjectURL(f);
       }));
       Promise.all(readers).then(items => {
@@ -344,7 +380,38 @@
     };
 
     // Initial draw
+    // Décide si le bouton Firebase doit s'afficher
+    if (window.__FB__) { saveCloudBtn.style.display = 'inline-block'; }
     draw();
+
+    // --- Save to Firebase (images + annotations) ---
+    async function saveAllToFirebase(){
+      if (!window.__FB__) { alert('Firebase non configuré'); return; }
+      const { storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp } = window.__FB__;
+      const annCol = collection(db, 'annotations');
+      for (const it of state.images){
+        try {
+          // 1) Upload image
+          const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${it.name}`;
+          const storageRef = ref(storage, path);
+          await uploadBytes(storageRef, it.file);
+          const url = await getDownloadURL(storageRef);
+          // 2) Save annotation doc
+          const payload = {
+            file_name: it.name,
+            storage_path: path,
+            download_url: url,
+            width: it.width,
+            height: it.height,
+            boxes: it.boxes.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,class:b.class})),
+            created_at: serverTimestamp(),
+          };
+          await addDoc(annCol, payload);
+        } catch (e){ console.error(e); alert('Erreur Firebase pour '+it.name+': '+e.message); }
+      }
+      alert('Enregistrement terminé sur Firebase ✅');
+    }
+    saveCloudBtn.onclick = saveAllToFirebase;
   </script>
 </body>
 </html>
