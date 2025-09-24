@@ -43,12 +43,15 @@
     // 3) Active Firestore et Storage
     // 4) Colle ta config dans FIREBASE_CONFIG et passe FIREBASE_ENABLED à true
 
+    import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    const storage = getStorage(appInst, "gs://pakchoi-cbbff.appspot.com");
+
     const FIREBASE_ENABLED = true; // <-- passe à true quand tu as mis ta config
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyCUkeiU5KLdj1zpwup_GFHXsBwsL6AUUHg",
       authDomain: "pakchoi-cbbff.firebaseapp.com",
       projectId: "pakchoi-cbbff",
-      storageBucket: "pakchoi-cbbff.firebasestorage.app",
+      storageBucket: "pakchoi-cbbff.appspot.com",
       messagingSenderId: "153676600433",
       appId: "1:153676600433:web:c96dbc5abb5802e4fd77d0",
       measurementId: "G-1JE7FR025Z"
