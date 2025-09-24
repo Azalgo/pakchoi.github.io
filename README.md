@@ -405,8 +405,13 @@
     }
     alert('Enregistrement terminé sur Supabase ✅');
   }
-
+  const saveBtn = document.getElementById('saveCloudBtn');
+  if (saveBtn) {
+    saveBtn.style.display = 'inline-block';
     saveBtn.onclick = () => saveAllToSupabase(window.state || window.__annotState || state);
+    // ^ selon où ton state global est exposé ; dans ton fichier, on peut exposer "state" :
+    window.state = window.state || state;
+  }
   </script>
 </body>
 </html>
