@@ -36,35 +36,40 @@
     .footer{ color: var(--muted); font-size: 12px; margin-top:6px; }
   </style>
   <!-- Firebase (optional) -->
-    <script type="module">
+   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   
     const firebaseConfig = {
-      apiKey: "AIzaSyCUkeiU5KLdj1zpwup_GFHXsBwsL6AUUHg",
+      apiKey: "…",
       authDomain: "pakchoi-cbbff.firebaseapp.com",
       projectId: "pakchoi-cbbff",
-      storageBucket: "pakchoi-cbbff.appspot.com",   // <-- corrigé
+      storageBucket: "pakchoi-cbbff.appspot.com",
       messagingSenderId: "153676600433",
       appId: "1:153676600433:web:c96dbc5abb5802e4fd77d0",
-      measurementId: "G-1JE7FR025Z"
     };
   
-    // 1. Initialiser Firebase
     const appInst = initializeApp(firebaseConfig);
-  
-    // 2. Auth anonyme
     const auth = getAuth(appInst);
-    signInAnonymously(auth);
-  
-    // 3. Services
     const storage = getStorage(appInst, "gs://pakchoi-cbbff.appspot.com");
     const db = getFirestore(appInst);
   
-    // 4. Exposer au reste du script
-    window.__FB__ = { auth, storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp };
+    // Désactive le bouton tant qu’on n’est pas connecté
+    const saveBtn = document.querySelector('#saveCloudBtn');
+    if (saveBtn) saveBtn.disabled = true;
+  
+    // 1) Connexion anonyme puis 2) activer l’UI
+    signInAnonymously(auth).catch(console.error);
+  
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('auth OK', user.uid);
+        window.__FB__ = { auth, storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp };
+        if (saveBtn) saveBtn.disabled = false;   // <--- activer maintenant
+      }
+    });
   </script>
 </head>
 <body>
