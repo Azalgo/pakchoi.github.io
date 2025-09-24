@@ -36,43 +36,35 @@
     .footer{ color: var(--muted); font-size: 12px; margin-top:6px; }
   </style>
   <!-- Firebase (optional) -->
-  <script type="module" id="firebase-setup">
-    // === Firebase OPTIONAL setup ===
-    // 1) Crée un projet Firebase → Web App → récupère la config ci-dessous
-    // 2) Active Authentication (sign-in method: Anonymous)
-    // 3) Active Firestore et Storage
-    // 4) Colle ta config dans FIREBASE_CONFIG et passe FIREBASE_ENABLED à true
-
-    import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-    const storage = getStorage(appInst, "gs://pakchoi-cbbff.appspot.com");
-
-    const FIREBASE_ENABLED = true; // <-- passe à true quand tu as mis ta config
-    const FIREBASE_CONFIG = {
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  
+    const firebaseConfig = {
       apiKey: "AIzaSyCUkeiU5KLdj1zpwup_GFHXsBwsL6AUUHg",
       authDomain: "pakchoi-cbbff.firebaseapp.com",
       projectId: "pakchoi-cbbff",
-      storageBucket: "pakchoi-cbbff.appspot.com",
+      storageBucket: "pakchoi-cbbff.appspot.com",   // <-- corrigé
       messagingSenderId: "153676600433",
       appId: "1:153676600433:web:c96dbc5abb5802e4fd77d0",
       measurementId: "G-1JE7FR025Z"
     };
-
-    if (FIREBASE_ENABLED) {
-      const app = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-      const authMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-      const storeMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
-      const dbMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
-      const appInst = app.initializeApp(FIREBASE_CONFIG);
-      const auth = authMod.getAuth(appInst);
-      await authMod.signInAnonymously(auth);
-      const storage = storeMod.getStorage(appInst);
-      const db = dbMod.getFirestore(appInst);
-
-      // expose pour le script principal
-      window.__FB__ = { auth, storage, db, ref: storeMod.ref, uploadBytes: storeMod.uploadBytes, getDownloadURL: storeMod.getDownloadURL,
-                        collection: dbMod.collection, addDoc: dbMod.addDoc, serverTimestamp: dbMod.serverTimestamp };
-    }
+  
+    // 1. Initialiser Firebase
+    const appInst = initializeApp(firebaseConfig);
+  
+    // 2. Auth anonyme
+    const auth = getAuth(appInst);
+    signInAnonymously(auth);
+  
+    // 3. Services
+    const storage = getStorage(appInst, "gs://pakchoi-cbbff.appspot.com");
+    const db = getFirestore(appInst);
+  
+    // 4. Exposer au reste du script
+    window.__FB__ = { auth, storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp };
   </script>
 </head>
 <body>
