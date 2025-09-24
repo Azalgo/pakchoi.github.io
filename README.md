@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Annotateur – Pak-choi / Blette</title>
+  <title>Pakchoi faut y aller</title>
   <style>
     :root { --bg:#0b1020; --fg:#eaf2ff; --muted:#9fb3d1; --accent:#7aa2ff; --danger:#ff6b6b; --ok:#2ecc71; }
     html, body { height:100%; }
@@ -79,8 +79,7 @@
 </head>
 <body>
   <header>
-    <h1>Annotateur – Pak-choi / Blette</h1>
-    <span class="badge">Local & gratuit • Aucune donnée envoyée</span>
+    <h1>Pakchoi faut y aller</h1>
   </header>
 
   <div class="wrap">
