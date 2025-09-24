@@ -15,7 +15,6 @@
     @media (max-width: 900px){ .wrap{ grid-template-columns: 1fr; height:auto; } }
     aside { border-right:1px solid #1f2a44; padding:16px; overflow:auto; }
     main { padding:12px; }
-
     .card { background:#0f1732; border:1px solid #1f2a44; border-radius: 14px; padding:12px; }
     .card + .card{ margin-top:12px; }
     .controls { display:flex; flex-wrap: wrap; gap:8px; align-items:center; }
@@ -24,21 +23,16 @@
     }
     .controls button:hover, .controls label.btn:hover, select:hover { border-color:#3a4c7a; }
     .controls button:disabled{ opacity:.5; cursor:not-allowed; }
-
     .btn-danger{ border-color:#5a2430; background:#1b0f14; color:#ffc9c9; }
     .btn-accent{ border-color:#2b4c9a; background:#13204a; }
     .btn-ok{ border-color:#255e3a; background:#0f1f18; }
-
     #canvasWrap{ position:relative; display:inline-block; }
     canvas { max-width: 100%; height: auto; background:#060a16; border-radius:14px; border:1px solid #1f2a44; }
     .hint { color: var(--muted); font-size: 13px; }
-
     .list{ display:flex; flex-direction:column; gap:6px; max-height: 260px; overflow:auto; }
     .item{ background:#0b1228; border:1px solid #1f2a44; border-radius:10px; padding:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
     .item small{ color:var(--muted); }
-
     .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; border:1px solid #263253; background:#0b1228; padding:2px 6px; border-radius:6px; }
-
     .footer{ color: var(--muted); font-size: 12px; margin-top:6px; }
   </style>
   <!-- Firebase (optional) -->
@@ -49,14 +43,15 @@
     // 3) Active Firestore et Storage
     // 4) Colle ta config dans FIREBASE_CONFIG et passe FIREBASE_ENABLED à true
 
-    const FIREBASE_ENABLED = false; // <-- passe à true quand tu as mis ta config
+    const FIREBASE_ENABLED = true; // <-- passe à true quand tu as mis ta config
     const FIREBASE_CONFIG = {
-      apiKey: "",
-      authDomain: "",
-      projectId: "",
-      storageBucket: "",
-      messagingSenderId: "",
-      appId: ""
+      apiKey: "AIzaSyCUkeiU5KLdj1zpwup_GFHXsBwsL6AUUHg",
+      authDomain: "pakchoi-cbbff.firebaseapp.com",
+      projectId: "pakchoi-cbbff",
+      storageBucket: "pakchoi-cbbff.firebasestorage.app",
+      messagingSenderId: "153676600433",
+      appId: "1:153676600433:web:c96dbc5abb5802e4fd77d0",
+      measurementId: "G-1JE7FR025Z"
     };
 
     if (FIREBASE_ENABLED) {
@@ -92,7 +87,6 @@
         <div class="hint">Glissez-déposez des images ici ou cliquez sur « Choisir des images ».
           Utilisez <span class="kbd">Z</span> pour annuler le rectangle en cours, <span class="kbd">⌫</span> pour supprimer la sélection, <span class="kbd">←/→</span> pour naviguer.</div>
       </div>
-
       <div class="card">
         <div class="controls" style="margin-bottom:8px;">
           <button id="prevBtn">◀️ Précédente</button>
@@ -114,13 +108,11 @@
         </div>
         <div class="footer" id="status">0 image</div>
       </div>
-
       <div class="card">
         <strong>Rectangles de l'image courante</strong>
         <div class="list" id="boxesList"></div>
       </div>
     </aside>
-
     <main>
       <div id="dropZone" class="card" style="text-align:center; padding:8px;">
         <div id="canvasWrap">
