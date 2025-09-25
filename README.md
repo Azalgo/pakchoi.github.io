@@ -97,6 +97,18 @@
         <div class="footer" id="status">0 image</div>
       </div>
       <div class="card">
+        <strong>Statistiques (globales)</strong>
+        <div class="list" style="max-height:none">
+          <div class="item"><div>Total photos</div><strong id="statTotal">—</strong></div>
+          <div class="item"><div>Pak-choi tagués</div><strong id="statPak">—</strong></div>
+          <div class="item"><div>Blettes taguées</div><strong id="statBlette">—</strong></div>
+        </div>
+        <div class="controls" style="margin-top:8px;">
+          <button id="refreshStatsBtn">🔄 Actualiser les stats</button>
+        </div>
+        <div class="footer">Ces chiffres viennent de Supabase (toutes les annotations enregistrées).</div>
+      </div>
+      <div class="card">
         <strong>Rectangles de l'image courante</strong>
         <div class="list" id="boxesList"></div>
       </div>
@@ -362,6 +374,38 @@
     // Décide si le bouton Firebase doit s'afficher
     if (window.__FB__) { saveCloudBtn.style.display = 'inline-block'; }
     draw();
+
+        // --- Stats Supabase ---
+    async function refreshStatsUI(){
+      try{
+        if (!window.__SB__ || !window.__SB__.supabase) return;
+        const { supabase } = window.__SB__;
+        // 1) Total photos (count exact, head request)
+        const { count: totalCount, error: cErr } = await supabase
+          .from('annotations')
+          .select('*', { count: 'exact', head: true });
+        if (cErr) throw cErr;
+        statTotal.textContent = totalCount ?? 0;
+        // 2) Compter classes côté client
+        const { data: rows, error: rErr } = await supabase
+          .from('annotations')
+          .select('boxes');
+        if (rErr) throw rErr;
+        let pak=0, blette=0;
+        for (const row of rows || []){
+          const arr = row?.boxes || [];
+          for (const b of arr){ if (b?.class === 'pak-choi') pak++; else if (b?.class === 'blette') blette++; }
+        }
+        statPak.textContent = pak;
+        statBlette.textContent = blette;
+      } catch(e){
+        console.error('Stats error:', e);
+        if (statTotal) statTotal.textContent = '—';
+        if (statPak) statPak.textContent = '—';
+        if (statBlette) statBlette.textContent = '—';
+      }
+    }
+    if (refreshStatsBtn) refreshStatsBtn.onclick = refreshStatsUI;
 
     // --- Save to Firebase (images + annotations) ---
     async function saveAllToSupabase(state) {
