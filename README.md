@@ -376,35 +376,54 @@
     draw();
 
         // --- Stats Supabase ---
-    async function refreshStatsUI(){
-      try{
-        if (!window.__SB__ || !window.__SB__.supabase) return;
-        const { supabase } = window.__SB__;
-        // 1) Total photos (count exact, head request)
-        const { count: totalCount, error: cErr } = await supabase
-          .from('annotations')
-          .select('*', { count: 'exact', head: true });
-        if (cErr) throw cErr;
-        statTotal.textContent = totalCount ?? 0;
-        // 2) Compter classes côté client
-        const { data: rows, error: rErr } = await supabase
-          .from('annotations')
-          .select('boxes');
-        if (rErr) throw rErr;
-        let pak=0, blette=0;
-        for (const row of rows || []){
-          const arr = row?.boxes || [];
-          for (const b of arr){ if (b?.class === 'pak-choi') pak++; else if (b?.class === 'blette') blette++; }
-        }
-        statPak.textContent = pak;
-        statBlette.textContent = blette;
-      } catch(e){
-        console.error('Stats error:', e);
-        if (statTotal) statTotal.textContent = '—';
-        if (statPak) statPak.textContent = '—';
-        if (statBlette) statBlette.textContent = '—';
+async function refreshStatsUI() {
+  try {
+    if (!window.__SB__ || !window.__SB__.supabase) return;
+    const { supabase } = window.__SB__;
+
+    // 1) Tentative via la vue 'annotation_stats' (1 seule requête)
+    const { data: vdata, error: verr } = await supabase
+      .from('annotations')
+      .select('*')
+      .single();
+
+    if (!verr && vdata) {
+      statTotal.textContent = vdata.total_photos ?? 0;
+      statPak.textContent   = vdata.pak_choi ?? 0;
+      statBlette.textContent= vdata.blette ?? 0;
+      return;
+    }
+
+    // 2) Fallback si la vue n'existe pas : méthode standard
+    const { count: totalCount, error: cErr } = await supabase
+      .from('annotations')
+      .select('*', { count: 'exact', head: true });
+    if (cErr) throw cErr;
+    statTotal.textContent = totalCount ?? 0;
+
+    const { data: rows, error: rErr } = await supabase
+      .from('annotations')
+      .select('boxes');
+    if (rErr) throw rErr;
+
+    let pak = 0, blette = 0;
+    for (const row of rows || []) {
+      const arr = row?.boxes || [];
+      for (const b of arr) {
+        if (b?.class === 'pak-choi') pak++;
+        else if (b?.class === 'blette') blette++;
       }
     }
+    statPak.textContent = pak;
+    statBlette.textContent = blette;
+
+  } catch (e) {
+    console.error('Stats error:', e);
+    statTotal.textContent = '—';
+    statPak.textContent = '—';
+    statBlette.textContent = '—';
+  }
+}
     if (refreshStatsBtn) refreshStatsBtn.onclick = refreshStatsUI;
 
     // --- Save to Firebase (images + annotations) ---
