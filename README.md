@@ -72,6 +72,7 @@
             <option value="pak-choi">pak-choi</option>
             <option value="blette">blette</option>
           </select>
+          <label class="btn" for="classSelect">🥬 Choix du légume</label>
         </div>
         <div class="controls" style="margin-bottom:8px;">
           <button id="undoBtn">↩️ Annuler</button>
