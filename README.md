@@ -58,7 +58,7 @@
     <aside>
       <div class="card">
         <div class="controls" style="margin-bottom:8px;">
-          <input id="fileInput" type="file" accept="image/*" multiple />
+          <input id="fileInput" type="file" accept="image/*" multiple style="display:none;"/>
           <label class="btn" for="fileInput">📷 Choisir des images</label>
         </div>
         <div class="hint">Glissez-déposez des images ici ou cliquez sur « Choisir des images ».
