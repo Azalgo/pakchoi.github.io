@@ -34,6 +34,25 @@
     .item small{ color:var(--muted); }
     .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; border:1px solid #263253; background:#0b1228; padding:2px 6px; border-radius:6px; }
     .footer{ color: var(--muted); font-size: 12px; margin-top:6px; }
+    /* Barre de stats tout en haut */
+    .statsbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      padding:8px 12px;
+      border-bottom:1px solid #1f2a44;
+      background:#0f1732;
+    }
+    .statschip{
+      background:#121a34;
+      border:1px solid #1f2a44;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .statschip b{ color:var(--fg); margin-left:6px; }
   </style>
   <!-- Firebase (optional) -->
    <script type="module">
@@ -63,6 +82,11 @@
       <h1>Pakchoi faut y aller</h1>
     </h4>
   </header>
+  <div class="statsbar">
+    <div class="statschip">Total photos <b id="statTotal">—</b></div>
+    <div class="statschip">Pak-choi tagués <b id="statPak">—</b></div>
+    <div class="statschip">Blettes taguées <b id="statBlette">—</b></div>
+  </div>
 
   <div class="wrap">
     <aside>
@@ -95,18 +119,6 @@
           <button id="saveCloudBtn" class="btn-accent">☁️ Enregistrer sur Supabase</button>
         </div>
         <div class="footer" id="status">0 image</div>
-      </div>
-      <div class="card">
-        <strong>Statistiques (globales)</strong>
-        <div class="list" style="max-height:none">
-          <div class="item"><div>Total photos</div><strong id="statTotal">—</strong></div>
-          <div class="item"><div>Pak-choi tagués</div><strong id="statPak">—</strong></div>
-          <div class="item"><div>Blettes taguées</div><strong id="statBlette">—</strong></div>
-        </div>
-        <div class="controls" style="margin-top:8px;">
-          <button id="refreshStatsBtn">🔄 Actualiser les stats</button>
-        </div>
-        <div class="footer">Ces chiffres viennent de Supabase (toutes les annotations enregistrées).</div>
       </div>
       <div class="card">
         <strong>Rectangles de l'image courante</strong>
@@ -152,6 +164,9 @@
     const boxesList = document.getElementById('boxesList');
     const status = document.getElementById('status');
     const dropZone = document.getElementById('dropZone');
+    const statTotal = document.getElementById('statTotal');
+    const statPak = document.getElementById('statPak');
+    const statBlette = document.getElementById('statBlette');
 
     // --- Helpers ---
     function fitToCanvas(img){
@@ -374,6 +389,7 @@
     // Décide si le bouton Firebase doit s'afficher
     if (window.__FB__) { saveCloudBtn.style.display = 'inline-block'; }
     draw();
+    refreshStatsUI();
 
         // --- Stats Supabase ---
 async function refreshStatsUI() {
@@ -381,26 +397,14 @@ async function refreshStatsUI() {
     if (!window.__SB__ || !window.__SB__.supabase) return;
     const { supabase } = window.__SB__;
 
-    // 1) Tentative via la vue 'annotation_stats' (1 seule requête)
-    const { data: vdata, error: verr } = await supabase
-      .from('annotations')
-      .select('*')
-      .single();
-
-    if (!verr && vdata) {
-      statTotal.textContent = vdata.total_photos ?? 0;
-      statPak.textContent   = vdata.pak_choi ?? 0;
-      statBlette.textContent= vdata.blette ?? 0;
-      return;
-    }
-
-    // 2) Fallback si la vue n'existe pas : méthode standard
+    // Total des photos (count exact, sans rapatrier les lignes)
     const { count: totalCount, error: cErr } = await supabase
       .from('annotations')
       .select('*', { count: 'exact', head: true });
     if (cErr) throw cErr;
     statTotal.textContent = totalCount ?? 0;
 
+    // Compter les rectangles par classe
     const { data: rows, error: rErr } = await supabase
       .from('annotations')
       .select('boxes');
@@ -408,8 +412,7 @@ async function refreshStatsUI() {
 
     let pak = 0, blette = 0;
     for (const row of rows || []) {
-      const arr = row?.boxes || [];
-      for (const b of arr) {
+      for (const b of (row?.boxes || [])) {
         if (b?.class === 'pak-choi') pak++;
         else if (b?.class === 'blette') blette++;
       }
