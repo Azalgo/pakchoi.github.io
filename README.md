@@ -83,9 +83,9 @@
     </h4>
   </header>
   <div class="statsbar">
-    <div class="statschip">Total photos <b id="statTotal">—</b></div>
-    <div class="statschip">Pak-choi tagués <b id="statPak">—</b></div>
-    <div class="statschip">Blettes taguées <b id="statBlette">—</b></div>
+    <div class="statschip">Nb photos uploadés: <b id="statTotal">—</b></div>
+    <div class="statschip">Nb Pakchoï tagués: <b id="statPak">—</b></div>
+    <div class="statschip">Nb Blettes taguées: <b id="statBlette">—</b></div>
   </div>
 
   <div class="wrap">
