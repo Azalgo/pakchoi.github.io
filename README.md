@@ -458,6 +458,7 @@
         alert('Erreur Supabase pour ' + it.name + ' : ' + e.message);
       }
     }
+    await refreshStatsUI();
     alert('Enregistrement terminé sur Supabase ✅');
   }
   const saveBtn = document.getElementById('saveCloudBtn');
