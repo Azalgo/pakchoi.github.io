@@ -389,7 +389,13 @@
     // Décide si le bouton Firebase doit s'afficher
     if (window.__FB__) { saveCloudBtn.style.display = 'inline-block'; }
     draw();
-    refreshStatsUI();
+    (function waitForSupabaseAndRefresh(){
+      if (window.__SB__ && window.__SB__.supabase) {
+        refreshStatsUI();
+      } else {
+        setTimeout(waitForSupabaseAndRefresh, 100);
+      }
+    })();
 
         // --- Stats Supabase ---
 async function refreshStatsUI() {
