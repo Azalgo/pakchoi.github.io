@@ -433,7 +433,6 @@ async function refreshStatsUI() {
     statBlette.textContent = '—';
   }
 }
-    if (refreshStatsBtn) refreshStatsBtn.onclick = refreshStatsUI;
 
     // --- Save to Firebase (images + annotations) ---
     async function saveAllToSupabase(state) {
