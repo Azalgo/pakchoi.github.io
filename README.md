@@ -52,7 +52,7 @@
 <body>
   <header>
 
-    <h3>C'est simple:<br>
+    <h4>C'est simple:<br>
       <ul> 
         <li>tu upload tes images de pakchoï ou de blettes</li>
         <li>"Choix du légume" -> tu choisis celui qui est affiché</li>
@@ -60,8 +60,8 @@
         <li>Si t'as plusieurs images, tu le fais sur chacune des images</li>
         <li>Quand t'as finis, t'oublies pas de cliquer sur "Enregistrer sur Supabase", sinon ça servira à rien.</li>
       </ul>
-      <h1>Allez Pakchoi faut y aller</h1>
-    </h3>
+      <h1>Pakchoi faut y aller</h1>
+    </h4>
   </header>
 
   <div class="wrap">
