@@ -79,8 +79,8 @@
           <button id="clearBtn" class="btn-danger">🧹 Tout effacer</button>
         </div>
         <div class="controls" style="margin-bottom:8px;">
-          <button id="exportJsonBtn" class="btn-accent">📦 Export JSON (COCO-lite)</button>
-          <button id="exportYoloBtn" class="btn-ok">🟢 Export YOLO (zip)</button>
+          <button id="exportJsonBtn" class="btn-accent" style="display:none;">📦 Export JSON (COCO-lite)</button>
+          <button id="exportYoloBtn" class="btn-ok" style="display:none;">🟢 Export YOLO (zip)</button>
           <button id="saveCloudBtn" class="btn-accent">☁️ Enregistrer sur Supabase</button>
         </div>
         <div class="footer" id="status">0 image</div>
